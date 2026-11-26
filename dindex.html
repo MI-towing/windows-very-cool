@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 11</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; height: 100vh; overflow: hidden; background: url('https://images.unsplash.com/photo-1620121692029-d088224ddc74?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat; user-select: none; }
+        .desktop-icons { position: absolute; top: 20px; left: 20px; display: flex; flex-direction: column; gap: 8px; }
+        .desktop-icon { display: flex; flex-direction: column; align-items: center; width: 80px; padding: 10px 5px; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+        .desktop-icon:hover { background: rgba(255,255,255,0.15); }
+        .desktop-icon .icon-img { font-size: 2.5rem; margin-bottom: 6px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+        .desktop-icon .icon-label { color: #fff; font-size: 0.75rem; text-align: center; text-shadow: 0 1px 3px rgba(0,0,0,0.8); }
+        .taskbar { position: fixed; bottom: 0; left: 0; right: 0; height: 48px; background: rgba(243,243,243,0.85); backdrop-filter: blur(30px); border-top: 1px solid rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .taskbar-center { display: flex; align-items: center; gap: 4px; }
+        .taskbar-btn { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer; transition: background 0.2s; font-size: 1.3rem; }
+        .taskbar-btn:hover { background: rgba(0,0,0,0.08); }
+        .taskbar-right { position: absolute; right: 10px; display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #333; }
+        .tray-icons { display: flex; gap: 6px; }
+        .tray-clock { text-align: right; line-height: 1.3; padding: 4px 8px; }
+        .tray-clock .time { font-size: 0.8rem; font-weight: 500; }
+        .tray-clock .date { font-size: 0.7rem; color: #555; }
+        .start-btn .win-logo { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; width: 20px; height: 20px; }
+        .start-btn .win-logo div { background: #0067c0; border-radius: 1px; }
+        .start-menu { position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%) translateY(20px); width: 500px; max-height: 600px; background: rgba(243,243,243,0.92); backdrop-filter: blur(40px); border-radius: 12px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 16px 40px rgba(0,0,0,0.2); z-index: 10000; padding: 30px; opacity: 0; pointer-events: none; transition: all 0.3s ease; }
+        .start-menu.open { opacity: 1; pointer-events: all; transform: translateX(-50%) translateY(0); }
+        .start-search { width: 100%; padding: 10px 16px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.1); background: rgba(255,255,255,0.8); font-size: 0.9rem; margin-bottom: 25px; outline: none; }
+        .start-section-title { font-size: 0.85rem; font-weight: 600; color: #333; margin-bottom: 12px; }
+        .pinned-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-bottom: 25px; }
+        .pinned-app { display: flex; flex-direction: column; align-items: center; padding: 12px 5px; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+        .pinned-app:hover { background: rgba(0,0,0,0.06); }
+        .pinned-app .app-icon { font-size: 1.8rem; margin-bottom: 6px; }
+        .pinned-app .app-name { font-size: 0.7rem; color: #333; text-align: center; }
+        .start-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.08); margin-top: 10px; }
+        .start-user { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 6px; cursor: pointer; }
+        .start-user .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg,#0067c0,#00a2ff); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.9rem; }
+        .start-user .user-name { font-size: 0.85rem; color: #333; font-weight: 500; }
+        .power-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 6px; cursor: pointer; font-size: 1.1rem; }
+        .power-btn:hover { background: rgba(0,0,0,0.06); }
+        .window { position: absolute; background: rgba(243,243,243,0.95); backdrop-filter: blur(20px); border-radius: 8px; border: 1px solid rgba(0,0,0,0.1); box-shadow: 0 8px 32px rgba(0,0,0,0.25); min-width: 300px; min-height: 200px; display: none; flex-direction: column; overflow: hidden; }
+        .window.open { display: flex; }
+        .window.maximized { top: 0!important; left: 0!important; width: 100%!important; height: calc(100vh - 48px)!important; border-radius: 0; }
+        .window-titlebar { height: 36px; display: flex; align-items: center; justify-content: space-between; padding-left: 14px; cursor: move; background: rgba(255,255,255,0.5); }
+        .window-titlebar .title { font-size: 0.8rem; color: #333; display: flex; align-items: center; gap: 8px; }
+        .window-controls { display: flex; height: 100%; }
+        .window-controls button { width: 46px; height: 100%; border: none; background: transparent; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; }
+        .window-controls button:hover { background: rgba(0,0,0,0.08); }
+        .window-controls .close-btn:hover { background: #e81123; color: #fff; }
+        .window-body { flex: 1; padding: 20px; overflow: auto; background: #fff; }
+        .notepad-area { width: 100%; height: 100%; border: none; resize: none; font-family: 'Consolas',monospace; font-size: 0.9rem; padding: 10px; outline: none; }
+        .calc-display { width: 100%; padding: 15px; font-size: 2rem; text-align: right; background: #f0f0f0; border: none; border-radius: 6px; margin-bottom: 15px; }
+        .calc-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; }
+        .calc-btn { padding: 15px; font-size: 1.1rem; border: none; border-radius: 6px; background: #f0f0f0; cursor: pointer; font-weight: 500; }
+        .calc-btn:hover { background: #e0e0e0; }
+        .calc-btn.operator { background: #e8e8e8; }
+        .calc-btn.equals { background: #0067c0; color: #fff; }
+        .settings-content { display: flex; gap: 20px; height: 100%; }
+        .settings-nav { width: 180px; border-right: 1px solid #eee; padding-right: 15px; }
+        .settings-nav-item { padding: 10px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; color: #333; margin-bottom: 4px; }
+        .settings-nav-item:hover { background: rgba(0,0,0,0.05); }
+        .settings-nav-item.active { background: rgba(0,103,192,0.1); color: #0067c0; font-weight: 600; }
+        .settings-main { flex: 1; padding: 10px; }
+        .settings-main h3 { font-size: 1.2rem; margin-bottom: 15px; color: #333; }
+        .settings-card { background: #f8f8f8; border-radius: 8px; padding: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; font-size: 0.85rem; color: #333; }
+        .settings-card .card-icon { font-size: 1.3rem; }
+        .wallpaper-preview { width: 100%; height: 120px; border-radius: 8px; background-size: cover; background-position: center; margin-bottom: 15px; border: 2px solid #eee; }
+        .wallpaper-btn { padding: 10px 20px; background: #0067c0; color: #fff; border: none; border-radius: 6px; font-size: 0.9rem; font-weight: 600; cursor: pointer; }
+        .wallpaper-btn:hover { background: #0055a0; }
+        .wallpaper-reset { padding: 10px 20px; background: #f0f0f0; color: #333; border: 1px solid #ddd; border-radius: 6px; font-size: 0.9rem; cursor: pointer; margin-left: 10px; }
+        .context-menu { position: fixed; background: rgba(249,249,249,0.95); backdrop-filter: blur(20px); border-radius: 8px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 8px 24px rgba(0,0,0,0.15); padding: 6px; z-index: 10001; display: none; min-width: 200px; }
+        .context-menu.open { display: block; }
+        .context-item { padding: 8px 14px; font-size: 0.82rem; color: #333; cursor: pointer; border-radius: 5px; display: flex; align-items: center; gap: 10px; }
+        .context-item:hover { background: rgba(0,0,0,0.06); }
+        .context-divider { height: 1px; background: rgba(0,0,0,0.08); margin: 5px 0; }
+        .toast { position: fixed; bottom: 60px; right: 20px; background: rgba(243,243,243,0.95); backdrop-filter: blur(20px); border-radius: 8px; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 8px 24px rgba(0,0,0,0.15); padding: 16px 20px; z-index: 10002; display: none; max-width: 350px; }
+        .toast.show { display: block; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .toast .toast-title { font-size: 0.85rem; font-weight: 600; color: #333; margin-bottom: 4px; }
+        .toast .toast-msg { font-size: 0.8rem; color: #555; }
+    </style>
+</head>   <body>
+    <div class="desktop-icons">
+        <div class="desktop-icon" ondblclick="openWindow('thispc')"><div class="icon-img">🖥️</div><div class="icon-label">This PC</div></div>
+        <div class="desktop-icon" ondblclick="openWindow('recycle')"><div class="icon-img">🗑️</div><div class="icon-label">Recycle Bin</div></div>
+        <div class="desktop-icon" ondblclick="openWindow('notepad')"><div class="icon-img">📝</div><div class="icon-label">Notepad</div></div>
+        <div class="desktop-icon" ondblclick="openWindow('calculator')"><div class="icon-img">🧮</div><div class="icon-label">Calculator</div></div>
+        <div class="desktop-icon" ondblclick="openWindow('settings')"><div class="icon-img">⚙️</div><div class="icon-label">Settings</div></div>
+        <div class="desktop-icon" ondblclick="openWindow('edge')"><div class="icon-img">🌐</div><div class="icon-label">Edge</div></div>
+    </div>
+    <div class="taskbar">
+        <div class="taskbar-center">
+            <div class="taskbar-btn start-btn" onclick="toggleStart()"><div class="win-logo"><div></div><div></div><div></div><div></div></div></div>
+            <div class="taskbar-btn" onclick="openWindow('edge')">🌐</div>
+            <div class="taskbar-btn" onclick="openWindow('notepad')">📝</div>
+            <div class="taskbar-btn" onclick="openWindow('calculator')">🧮</div>
+            <div class="taskbar-btn" onclick="openWindow('settings')">⚙️</div>
+            <div class="taskbar-btn" onclick="openWindow('thispc')">🖥️</div>
+        </div>
+        <div class="taskbar-right">
+            <div class="tray-icons">🔊 📶 🔋</div>
+            <div class="tray-clock"><div class="time" id="time"></div><div class="date" id="date"></div></div>
+        </div>
+    </div>
+    <div class="start-menu" id="startMenu">
+        <input type="text" class="start-search" placeholder="🔍 Type here to search">
+        <div class="start-section-title">Pinned</div>
+        <div class="pinned-grid">
+            <div class="pinned-app" onclick="openWindow('edge')"><div class="app-icon">🌐</div><div class="app-name">Edge</div></div>
+            <div class="pinned-app" onclick="openWindow('notepad')"><div class="app-icon">📝</div><div class="app-name">Notepad</div></div>
+            <div class="pinned-app" onclick="openWindow('calculator')"><div class="app-icon">🧮</div><div class="app-name">Calculator</div></div>
+            <div class="pinned-app" onclick="openWindow('settings')"><div class="app-icon">⚙️</div><div class="app-name">Settings</div></div>
+            <div class="pinned-app"><div class="app-icon">📁</div><div class="app-name">Files</div></div>
+            <div class="pinned-app"><div class="app-icon">🎵</div><div class="app-name">Music</div></div>
+            <div class="pinned-app"><div class="app-icon">📷</div><div class="app-name">Photos</div></div>
+            <div class="pinned-app"><div class="app-icon">🛒</div><div class="app-name">Store</div></div>
+            <div class="pinned-app"><div class="app-icon">📧</div><div class="app-name">Mail</div></div>
+            <div class="pinned-app"><div class="app-icon">📅</div><div class="app-name">Calendar</div></div>
+            <div class="pinned-app"><div class="app-icon">💬</div><div class="app-name">Chat</div></div>
+            <div class="pinned-app"><div class="app-icon">🎮</div><div class="app-name">Xbox</div></div>
+        </div>
+        <div class="start-footer">
+            <div class="start-user"><div class="avatar">S</div><div class="user-name">Student</div></div>
+            <div class="power-btn">⏻</div>
+        </div>
+    </div>
+    <div class="window" id="win-notepad" style="top:80px;left:100px;width:500px;height:400px;">
+        <div class="window-titlebar" onmousedown="startDrag(event,'win-notepad')"><div class="title">📝 Notepad</div><div class="window-controls"><button onclick="minimizeWindow('win-notepad')">─</button><button onclick="maximizeWindow('win-notepad')">□</button><button class="close-btn" onclick="closeWindow('win-notepad')">✕</button></div></div>
+        <div class="window-body"><textarea class="notepad-area" placeholder="Start typing..."></textarea></div>
+    </div>
+    <div class="window" id="win-calculator" style="top:60px;left:200px;width:320px;height:450px;">
+        <div class="window-titlebar" onmousedown="startDrag(event,'win-calculator')"><div class="title">🧮 Calculator</div><div class="window-controls"><button onclick="minimizeWindow('win-calculator')">─</button><button onclick="maximizeWindow('win-calculator')">□</button><button class="close-btn" onclick="closeWindow('win-calculator')">✕</button></div></div>
+        <div class="window-body">
+            <input type="text" class="calc-display" id="calcDisplay" readonly value="0">
+            <div class="calc-grid">
+                <button class="calc-btn" onclick="calcClear()">C</button><button class="calc-btn" onclick="calcBack()">⌫</button><button class="calc-btn operator" onclick="calcInput('%')">%</button><button class="calc-btn operator" onclick="calcInput('/')">÷</button>
+                <button class="calc-btn" onclick="calcInput('7')">7</button><button class="calc-btn" onclick="calcInput('8')">8</button><button class="calc-btn" onclick="calcInput('9')">9</button><button class="calc-btn operator" onclick="calcInput('*')">×</button>
+                <button class="calc-btn" onclick="calcInput('4')">4</button><button class="calc-btn" onclick="calcInput('5')">5</button><button class="calc-btn" onclick="calcInput('6')">6</button><button class="calc-btn operator" onclick="calcInput('-')">−</button>
+                <button class="calc-btn" onclick="calcInput('1')">1</button><button class="calc-btn" onclick="calcInput('2')">2</button><button class="calc-btn" onclick="calcInput('3')">3</button><button class="calc-btn operator" onclick="calcInput('+')">+</button>
+                <button class="calc-btn" onclick="calcInput('0')">0</button><button class="calc-btn" onclick="calcInput('.')">.</button><button class="calc-btn equals" onclick="calcEquals()">=</button>
+            </div>
+        </div>
+    </div>
+    <div class="window" id="win-settings" style="top:50px;left:150px;width:700px;height:480px;">
+        <div class="window-titlebar" onmousedown="startDrag(event,'win-settings')"><div class="title">⚙️ Settings</div><div class="window-controls"><button onclick="minimizeWindow('win-settings')">─</button><button onclick="maximizeWindow('win-settings')">□</button><button class="close-btn" onclick="closeWindow('win-settings')">✕</button></div></div>
+        <div class="window-body">
+            <div class="settings-content">
+                <div class="settings-nav">
+                    <div class="settings-nav-item active" onclick="showPage('system',this)">🖥️ System</div>
+                    <div class="settings-nav-item" onclick="showPage('personalization',this)">🎨 Personalization</div>
+                    <div class="settings-nav-item" onclick="showPage('network',this)">📡 Network</div>
+                    <div class="settings-nav-item" onclick="showPage('apps',this)">📦 Apps</div>
+                    <div class="settings-nav-item" onclick="showPage('accounts',this)">👤 Accounts</div>
+                    <div class="settings-nav-item" onclick="showPage('battery',this)">🔋 Battery</div>
+                    <div class="settings-nav-item" onclick="showPage('privacy',this)">🔒 Privacy</div>
+                    <div class="settings-nav-item" onclick="showPage('update',this)">🔄 Update</div>
+                </div>
+                <div class="settings-main">
+                    <div id="page-system"><h3>System</h3><div class="settings-card"><span class="card-icon">🖥️</span> Display</div><div class="settings-card"><span class="card-icon">🔊</span> Sound</div><div class="settings-card"><span class="card-icon">🔔</span> Notifications</div><div class="settings-card"><span class="card-icon">🔋</span> Power & Battery</div><div class="settings-card"><span class="card-icon">💾</span> Storage</div></div>
+                    <div id="page-personalization" style="display:none;"><h3>Personalization</h3><p style="font-size:0.85rem;color:#555;margin-bottom:15px;">Change your desktop background.</p><div class="wallpaper-preview" id="wpPreview"></div><button class="wallpaper-btn" onclick="document.getElementById('wpInput').click()">📁 Browse Image</button><button class="wallpaper-reset" onclick="resetWP()">↩️ Reset</button><input type="file" id="wpInput" accept="image/*" style="display:none" onchange="changeWP(this)"></div>
+                    <div id="page-network" style="display:none;"><h3>Network</h3><div class="settings-card"><span class="card-icon">📶</span> Wi-Fi — Connected</div><div class="settings-card"><span class="card-icon">🔵</span> Bluetooth — On</div></div>
+                    <div id="page-apps" style="display:none;"><h3>Apps</h3><div class="settings-card"><span class="card-icon">📝</span> Notepad</div><div class="settings-card"><span class="card-icon">🧮</span> Calculator</div><div class="settings-card"><span class="card-icon">🌐</span> Edge</div></div>
+                    <div id="page-accounts" style="display:none;"><h3>Accounts</h3><div class="settings-card"><span class="card-icon">👤</span> Student</div></div>
+                    <div id="page-battery" style="display:none;"><h3>Battery</h3><div class="settings-card"><span class="card-icon">🔋</span> 87%</div></div>
+                    <div id="page-privacy" style="display:none;"><h3>Privacy</h3><div class="settings-card"><span class="card-icon">📍</span> Location</div><div class="settings-card"><span class="card-icon">🛡️</span> Security</div></div>
+                    <div id="page-update" style="display:none;"><h3>Windows Update</h3><div class="settings-card"><span class="card-icon">✅</span> Up to date</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="window" id="win-thispc" style="top:70px;left:120px;width:500px;height:350px;">
+        <div class="window-titlebar" onmousedown="startDrag(event,'win-thispc')"><div class="title">🖥️ This PC</div><div class="window-controls"><button onclick="minimizeWindow('win-thispc')">─</button><button onclick="maximizeWindow('win-thispc')">□</button><button class="close-btn" onclick="closeWindow('win-thispc')">✕</button></div></div>
+        <div class="window-body"><h3 style="margin-bottom:15px;font-size:1rem;color:#333;">Drives</h3><div class="settings-card"><span class="card-icon">💾</span> Local Disk (C:) — 256 GB</div><h3 style="margin:20px 0 15px;font-size:1rem;color:#333;">Folders</h3><div class="settings-card"><span class="card-icon">📄</span> Documents</div><div class="settings-card"><span class="card-icon">⬇️</span> Downloads</div><div class="settings-card"><span class="card-icon">🖼️</span> Pictures</div></div>
+    </div>
+    <div class="window" id="win-recycle" style="top:90px;left:180px;width:400px;height:300px;">
+        <div class="window-titlebar" onmousedown="startDrag(event,'win-recycle')"><div class="title">🗑️ Recycle Bin</div><div class="window-controls"><button onclick="minimizeWindow('win-recycle')">─</button><button onclick="maximizeWindow('win-recycle')">□</button><button class="close-btn" onclick="closeWindow('win-recycle')">✕</button></div></div>
+        <div class="window-body" style="display:flex;align-items:center;justify-content:center;height:100%;color:#999;">Recycle Bin is empty</div>
+    </div>
+    <div class="window" id="win-edge" style="top:40px;left:80px;width:600px;height:420px;">
+        <div class="window-titlebar" onmousedown="startDrag(event,'win-edge')"><div class="title">🌐 Microsoft Edge</div><div class="window-controls"><button onclick="minimizeWindow('win-edge')">─</button><button onclick="maximizeWindow('win-edge')">□</button><button class="close-btn" onclick="closeWindow('win-edge')">✕</button></div></div>
+        <div class="window-body" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;"><div style="font-size:3rem;margin-bottom:15px;">🌐</div><p style="color:#666;font-size:0.9rem;">Demo browser. Use your real tab for actual browsing.</p></div>
+    </div>
+    <div class="context-menu" id="contextMenu">
+        <div class="context-item">🔄 Refresh</div><div class="context-divider"></div>
+        <div class="context-item">📋 Paste</div><div class="context-item">📄 New</div><div class="context-divider"></div>
+        <div class="context-item" onclick="openWindow('settings');showPage('personalization',document.querySelectorAll('.settings-nav-item')[1])">🎨 Personalize</div>
+    </div>
+    <div class="toast" id="toast"><div class="toast-title">Windows</div><div class="toast-msg">Welcome to Windows 11. Everything is up to date.</div></div>   
+      <script>
+        const DW='https://images.unsplash.com/photo-1620121692029-d088224ddc74?auto=format&fit=crop&w=1920&q=80';
+        function updateClock(){const n=new Date();document.getElementById('time').textContent=n.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});document.getElementById('date').textContent=n.toLocaleDateString([],{month:'numeric',day:'numeric',year:'numeric'});}
+        updateClock();setInterval(updateClock,1000);
+        function toggleStart(){document.getElementById('startMenu').classList.toggle('open');}
+        document.addEventListener('click',e=>{if(!e.target.closest('.start-menu')&&!e.target.closest('.start-btn'))document.getElementById('startMenu').classList.remove('open');if(!e.target.closest('.context-menu'))document.getElementById('contextMenu').classList.remove('open');});
+        let z=100;
+        function openWindow(id){const w=document.getElementById('win-'+id);if(w){w.classList.add('open');w.style.zIndex=++z;document.getElementById('startMenu').classList.remove('open');}}
+        function closeWindow(id){document.getElementById(id).classList.remove('open');}
+        function minimizeWindow(id){document.getElementById(id).classList.remove('open');}
+        function maximizeWindow(id){document.getElementById(id).classList.toggle('maximized');}
+        let dW=null,dX,dY;
+        function startDrag(e,id){dW=document.getElementById(id);if(dW.classList.contains('maximized'))return;dX=e.clientX-dW.offsetLeft;dY=e.clientY-dW.offsetTop;dW.style.zIndex=++z;}
+        document.addEventListener('mousemove',e=>{if(dW){dW.style.left=(e.clientX-dX)+'px';dW.style.top=(e.clientY-dY)+'px';}});
+        document.addEventListener('mouseup',()=>{dW=null;});
+        let cv='0';
+        function calcInput(v){if(cv==='0'&&v!=='.')cv=v;else cv+=v;document.getElementById('calcDisplay').value=cv;}
+        function calcClear(){cv='0';document.getElementById('calcDisplay').value='0';}
+        function calcBack(){cv=cv.slice(0,-1);if(cv==='')cv='0';document.getElementById('calcDisplay').value=cv;}
+        function calcEquals(){try{cv=eval(cv).toString();document.getElementById('calcDisplay').value=cv;}catch{document.getElementById('calcDisplay').value='Error';cv='0';}}
+        function showPage(p,el){document.querySelectorAll('[id^="page-"]').forEach(x=>x.style.display='none');document.getElementById('page-'+p).style.display='block';document.querySelectorAll('.settings-nav-item').forEach(n=>n.classList.remove('active'));if(el)el.classList.add('active');}
+        function changeWP(input){const f=input.files[0];if(f){const r=new FileReader();r.onload=e=>{document.body.style.background=`url('${e.target.result}') center/cover no-repeat`;document.getElementById('wpPreview').style.backgroundImage=`url('${e.target.result}')`;};r.readAsDataURL(f);}}
+        function resetWP(){document.body.style.background=`url('${DW}') center/cover no-repeat`;document.getElementById('wpPreview').style.backgroundImage=`url('${DW}')`;document.getElementById('wpInput').value='';}
+        document.getElementById('wpPreview').style.backgroundImage=`url('${DW}')`;
+        document.body.addEventListener('contextmenu',e=>{e.preventDefault();const m=document.getElementById('contextMenu');m.style.left=e.clientX+'px';m.style.top=e.clientY+'px';m.classList.add('open');});
+        setTimeout(()=>{document.getElementById('toast').classList.add('show');setTimeout(()=>document.getElementById('toast').classList.remove('show'),4000);},1000);
+    </script>
+</body>
+</html>   
